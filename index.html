@@ -16,7 +16,7 @@ function saveDraft(){
  try{localStorage.setItem(SAVE_KEY,JSON.stringify(draft));}
  catch(err){document.getElementById('save-status').textContent='Unable to save on this device. Keep this page open and check Safari storage settings.';}
 }
-function updateCount(){const n=[...document.querySelectorAll('.vqty')].reduce((v,e)=>v+(Number(e.value)||0),0);document.getElementById('count').textContent=`${n} of 16 positions selected · ${Math.max(0,16-n)} unused`;document.getElementById('count').style.color=n>16?'#b00020':'';saveDraft()}
+function updateCount(){const n=[...document.querySelectorAll('.vqty')].reduce((v,e)=>v+(Number(e.value)||0),0);document.getElementById('count').textContent=`${n} labels · ${Math.max(1,Math.ceil(n/16))} A4 sheet${Math.ceil(n/16)===1?'':'s'} · ${n%16===0?0:16-n%16} unused on last sheet`;document.getElementById('count').style.color=n>0?'#147d82':'';saveDraft()}
 document.getElementById('add').onclick=()=>addVariety('',1,[]);
 const now=new Date();document.getElementById('made').value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
 let recovered=false;
@@ -42,16 +42,16 @@ function fromBase64(s){let binary=atob(s),bytes=new Uint8Array(binary.length);fo
 let lastUrl=null;
 async function generate(){let status=document.getElementById('status'),button=document.getElementById('generate');try{
 button.disabled=true;status.textContent='Creating A4 PDF…';if(!window.PDFLib)throw new Error('PDF library could not load. Please check internet connection.');
-const entries=[];for(const card of varieties.children){const name0=card.querySelector('.vname').value.trim(),qty=Number(card.querySelector('.vqty').value),allergens=[...card.querySelectorAll('.checks input:checked')].map(x=>x.value);if(!name0)throw new Error('Enter every sandwich name');if(!Number.isInteger(qty)||qty<1||qty>16)throw new Error('Each quantity must be 1–16');if(allergens.length>6)throw new Error('Maximum six allergens per sandwich');for(let k=0;k<qty;k++)entries.push({name:/s\/w$/i.test(name0)?name0:name0+' s/w',allergens})}if(!entries.length||entries.length>16)throw new Error('Total quantity must be 1–16');
+const entries=[];for(const card of varieties.children){const name0=card.querySelector('.vname').value.trim(),qty=Number(card.querySelector('.vqty').value),allergens=[...card.querySelectorAll('.checks input:checked')].map(x=>x.value);if(!name0)throw new Error('Enter every sandwich name');if(!Number.isInteger(qty)||qty<1||qty>500)throw new Error('Each quantity must be 1–500');if(allergens.length>6)throw new Error('Maximum six allergens per sandwich');for(let k=0;k<qty;k++)entries.push({name:/s\/w$/i.test(name0)?name0:name0+' s/w',allergens})}if(!entries.length||entries.length>500)throw new Error('Total quantity must be 1–500');
 const made=document.getElementById('made').value;if(!made)throw new Error('Select prepared date');const parts=made.split('-').map(Number);const exp=new Date(Date.UTC(parts[0],parts[1]-1,parts[2]+3));const date=String(exp.getUTCDate()).padStart(2,'0')+'/'+String(exp.getUTCMonth()+1).padStart(2,'0')+'/'+String(exp.getUTCFullYear()).slice(-2);
-const {PDFDocument,StandardFonts,rgb}=PDFLib;const doc=await PDFDocument.load(fromBase64(MASTER));const page=doc.getPages()[0];const H=page.getHeight(),font=await doc.embedFont(StandardFonts.Helvetica),bold=await doc.embedFont(StandardFonts.HelveticaBold);
-function center(t,x,y,w,size,f,underline){let sz=size;while(f.widthOfTextAtSize(t,sz)>w-3&&sz>4)sz-=.2;const tw=f.widthOfTextAtSize(t,sz);const xx=x+(w-tw)/2;page.drawText(t,{x:xx,y:H-y-sz,size:sz,font:f,color:rgb(0,0,0)});if(underline)page.drawLine({start:{x:xx,y:H-y-sz-1.2},end:{x:xx+tw,y:H-y-sz-1.2},thickness:.55,color:rgb(0,0,0)})}
-for(let i=0;i<16;i++){const col=i%2,row=Math.floor(i/2),dx=col*(row===0?288.4:281.5),dy=row*96;
-if(i>=entries.length){page.drawRectangle({x:dx+9,y:H-(dy+126),width:277,height:93,color:rgb(1,1,1)});continue;}
-const {name,allergens}=entries[i];center(name,dx+48,dy+44,200,9,bold,true);center('USE BY DATE- '+date,dx+44,dy+63,210,10,bold,true);
-const cx=[47.35,86.75,126.7,167,206.3,246.3];for(let j=0;j<6;j++){if(allergens[j])center(allergens[j],dx+cx[j]-20,dy+84.3,40,6.7,font,false)}
-}
-const pdf=await doc.save();if(lastUrl)URL.revokeObjectURL(lastUrl);lastUrl=URL.createObjectURL(new Blob([pdf],{type:'application/pdf'}));let a=document.getElementById('download');a.href=lastUrl;a.download='Yarrie_Sandwich_Labels_'+document.getElementById('made').value+'.pdf';a.hidden=false;document.getElementById('preview').src=lastUrl;a.click();status.textContent='Download requested: '+a.download+'. If Safari opens a preview, use Share → Save to Files.';
+const {PDFDocument,StandardFonts,rgb}=PDFLib;const templateBytes=fromBase64(MASTER);const doc=await PDFDocument.load(templateBytes);const templateDoc=await PDFDocument.load(templateBytes);const sheetCount=Math.ceil(entries.length/16);for(let sheet=1;sheet<sheetCount;sheet++){const [copied]=await doc.copyPages(templateDoc,[0]);doc.addPage(copied)}const font=await doc.embedFont(StandardFonts.Helvetica),bold=await doc.embedFont(StandardFonts.HelveticaBold);
+function center(page,H,t,x,y,w,size,f,underline){let sz=size;while(f.widthOfTextAtSize(t,sz)>w-3&&sz>4)sz-=.2;const tw=f.widthOfTextAtSize(t,sz);const xx=x+(w-tw)/2;page.drawText(t,{x:xx,y:H-y-sz,size:sz,font:f,color:rgb(0,0,0)});if(underline)page.drawLine({start:{x:xx,y:H-y-sz-1.2},end:{x:xx+tw,y:H-y-sz-1.2},thickness:.55,color:rgb(0,0,0)})}
+for(let sheet=0;sheet<sheetCount;sheet++){const page=doc.getPages()[sheet],H=page.getHeight();for(let i=0;i<16;i++){const entryIndex=sheet*16+i;const col=i%2,row=Math.floor(i/2),dx=col*(row===0?288.4:281.5),dy=row*96;
+if(entryIndex>=entries.length){page.drawRectangle({x:dx+9,y:H-(dy+126),width:277,height:93,color:rgb(1,1,1)});continue;}
+const {name,allergens}=entries[entryIndex];center(page,H,name,dx+48,dy+44,200,9,bold,true);center(page,H,'USE BY DATE- '+date,dx+44,dy+63,210,10,bold,true);
+const cx=[47.35,86.75,126.7,167,206.3,246.3];for(let j=0;j<6;j++){if(allergens[j])center(page,H,allergens[j],dx+cx[j]-20,dy+84.3,40,6.7,font,false)}
+}}
+const pdf=await doc.save();if(lastUrl)URL.revokeObjectURL(lastUrl);lastUrl=URL.createObjectURL(new Blob([pdf],{type:'application/pdf'}));let a=document.getElementById('download');a.href=lastUrl;a.download='Yarrie_Sandwich_Labels_'+document.getElementById('made').value+'.pdf';a.hidden=false;document.getElementById('preview').src=lastUrl;a.click();status.textContent=sheetCount+' A4 sheet(s) generated. Download requested: '+a.download+'. If Safari opens a preview, use Share → Save to Files.';
 }catch(e){status.textContent='Error: '+e.message}finally{button.disabled=false}}
 document.getElementById('generate').addEventListener('click',generate);
 
@@ -66,7 +66,7 @@ async function generateCrib(){
  for(const card of varieties.children){
   const name=card.querySelector('.vname').value.trim(),qty=Number(card.querySelector('.vqty').value);
   if(!name)throw new Error('Enter every sandwich name');
-  if(!Number.isInteger(qty)||qty<1||qty>16)throw new Error('Each quantity must be 1–16');
+  if(!Number.isInteger(qty)||qty<1||qty>500)throw new Error('Each quantity must be 1–500');
   const selected=[...card.querySelectorAll('.checks input:checked')].map(e=>e.value);
   if(selected.length>6)throw new Error('Maximum six allergens per sandwich');
   items.push({name,selected});

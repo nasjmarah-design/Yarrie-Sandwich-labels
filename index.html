@@ -60,14 +60,17 @@ page.drawRectangle({x:dx+76,y:H-(dy+77),width:146,height:27,color:rgb(1,1,1)});
 const labelTitle=name.toUpperCase();
 const prefix=labelTitle.startsWith('S/W ')?'S/W':labelTitle.startsWith('GG - ')?'GG -':null;
 if(prefix){
- let sz=9;while(bold.widthOfTextAtSize(labelTitle,sz)>197&&sz>4)sz-=.2;
- const fullWidth=bold.widthOfTextAtSize(labelTitle,sz);
+ const productName=labelTitle.slice(prefix.length).trimStart();
+ const gap=10; // Clear space between the grey prefix badge and product name (PDF points).
+ let sz=9;
+ while(bold.widthOfTextAtSize(prefix,sz)+gap+bold.widthOfTextAtSize(productName,sz)>197&&sz>4)sz-=.2;
+ const prefixWidth=bold.widthOfTextAtSize(prefix,sz);
+ const fullWidth=prefixWidth+gap+bold.widthOfTextAtSize(productName,sz);
  const startX=dx+48+(200-fullWidth)/2;
  const baseline=H-(dy+42)-sz;
- const prefixWidth=bold.widthOfTextAtSize(prefix,sz);
  page.drawRectangle({x:startX-3,y:baseline-3,width:prefixWidth+6,height:sz+7,color:rgb(.82,.82,.82),opacity:1});
  page.drawText(prefix,{x:startX,y:baseline,size:sz,font:bold,color:rgb(0,0,0)});
- page.drawText(labelTitle.slice(prefix.length),{x:startX+prefixWidth,y:baseline,size:sz,font:bold,color:rgb(0,0,0)});
+ page.drawText(productName,{x:startX+prefixWidth+gap,y:baseline,size:sz,font:bold,color:rgb(0,0,0)});
 }else{
  center(page,H,labelTitle,dx+48,dy+42,200,9,bold,false);
 }

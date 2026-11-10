@@ -65,7 +65,7 @@ if(prefix){
  const startX=dx+48+(200-fullWidth)/2;
  const baseline=H-(dy+42)-sz;
  const prefixWidth=bold.widthOfTextAtSize(prefix,sz);
- page.drawRectangle({x:startX-3,y:baseline-3,width:prefixWidth+6,height:sz+7,color:rgb(.67,.67,.67),opacity:1});
+ page.drawRectangle({x:startX-3,y:baseline-3,width:prefixWidth+6,height:sz+7,color:rgb(.82,.82,.82),opacity:1});
  page.drawText(prefix,{x:startX,y:baseline,size:sz,font:bold,color:rgb(0,0,0)});
  page.drawText(labelTitle.slice(prefix.length),{x:startX+prefixWidth,y:baseline,size:sz,font:bold,color:rgb(0,0,0)});
 }else{

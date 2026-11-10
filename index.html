@@ -56,7 +56,21 @@ const {name,allergens,useBy}=entries[entryIndex];const date=useBy.split('-').rev
 // Mask the two original template rules before drawing the replacement text.
 page.drawRectangle({x:dx+76,y:H-(dy+77),width:146,height:27,color:rgb(1,1,1)});
 // Only ONE separator; neither text line gets an underline.
-center(page,H,name.toUpperCase(),dx+48,dy+42,200,9,bold,false);
+// Subtle grey highlight behind the product-type prefix only; keep title centred.
+const labelTitle=name.toUpperCase();
+const prefix=labelTitle.startsWith('S/W ')?'S/W':labelTitle.startsWith('GG - ')?'GG -':null;
+if(prefix){
+ let sz=9;while(bold.widthOfTextAtSize(labelTitle,sz)>197&&sz>4)sz-=.2;
+ const fullWidth=bold.widthOfTextAtSize(labelTitle,sz);
+ const startX=dx+48+(200-fullWidth)/2;
+ const baseline=H-(dy+42)-sz;
+ const prefixWidth=bold.widthOfTextAtSize(prefix,sz);
+ page.drawRectangle({x:startX-2,y:baseline-2,width:prefixWidth+4,height:sz+5,color:rgb(.84,.84,.84)});
+ page.drawText(prefix,{x:startX,y:baseline,size:sz,font:bold,color:rgb(.27,.27,.27)});
+ page.drawText(labelTitle.slice(prefix.length),{x:startX+prefixWidth,y:baseline,size:sz,font:bold,color:rgb(0,0,0)});
+}else{
+ center(page,H,labelTitle,dx+48,dy+42,200,9,bold,false);
+}
 page.drawLine({start:{x:dx+85,y:H-(dy+60)},end:{x:dx+210,y:H-(dy+60)},thickness:.65,color:rgb(.04,.13,.32)});
 center(page,H,'USE BY DATE- '+date,dx+44,dy+63,210,10,bold,false);
 const cx=[47.35,86.75,126.7,167,206.3,246.3];for(let j=0;j<6;j++){if(allergens[j])center(page,H,allergens[j],dx+cx[j]-20,dy+84.3,40,6.7,font,false)}

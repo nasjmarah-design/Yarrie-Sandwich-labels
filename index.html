@@ -51,11 +51,12 @@ function center(page,H,t,x,y,w,size,f,underline){let sz=size;while(f.widthOfText
 for(let sheet=0;sheet<sheetCount;sheet++){const page=doc.getPages()[sheet],H=page.getHeight();for(let i=0;i<16;i++){const entryIndex=sheet*16+i;const col=i%2,row=Math.floor(i/2),dx=col*(row===0?288.4:281.5),dy=row*96;
 if(entryIndex>=entries.length){page.drawRectangle({x:dx+9,y:H-(dy+126),width:277,height:93,color:rgb(1,1,1)});continue;}
 const {name,allergens}=entries[entryIndex];
-// Mask the two preprinted horizontal rules in the original label template.
-page.drawRectangle({x:dx+85,y:H-(dy+75.5),width:125,height:23,color:rgb(1,1,1)});
-// Compact uppercase heading and expiry, without any text underlines.
+// Mask the two original template rules before drawing the replacement text.
+page.drawRectangle({x:dx+76,y:H-(dy+77),width:146,height:27,color:rgb(1,1,1)});
+// Only ONE separator; neither text line gets an underline.
 center(page,H,name.toUpperCase(),dx+48,dy+42,200,9,bold,false);
-center(page,H,'USE BY DATE- '+date,dx+44,dy+61,210,10,bold,false);
+page.drawLine({start:{x:dx+85,y:H-(dy+60)},end:{x:dx+210,y:H-(dy+60)},thickness:.65,color:rgb(.04,.13,.32)});
+center(page,H,'USE BY DATE- '+date,dx+44,dy+63,210,10,bold,false);
 const cx=[47.35,86.75,126.7,167,206.3,246.3];for(let j=0;j<6;j++){if(allergens[j])center(page,H,allergens[j],dx+cx[j]-20,dy+84.3,40,6.7,font,false)}
 }}
 const pdf=await doc.save();if(lastUrl)URL.revokeObjectURL(lastUrl);lastUrl=URL.createObjectURL(new Blob([pdf],{type:'application/pdf'}));let a=document.getElementById('download');a.href=lastUrl;a.download='Yarrie_Sandwich_Labels_'+document.getElementById('made').value+'.pdf';a.hidden=false;document.getElementById('preview').src=lastUrl;document.getElementById('print-again').hidden=false;a.click();status.textContent=sheetCount+' A4 sheet(s) generated. Download requested: '+a.download+'. If Safari opens a preview, use Share → Save to Files.';
